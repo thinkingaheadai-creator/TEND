@@ -1,15 +1,43 @@
 "use client";
 
-import { useState, useSyncExternalStore } from "react";
+import { Suspense, useEffect, useState, useSyncExternalStore } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import ItemRow from "@/components/ItemRow";
 import ItemDetail from "@/components/ItemDetail";
 import InstallHint from "@/components/InstallHint";
+import { db } from "@/lib/db";
 import {
   useCompletedTodayItems,
   useOverdueItems,
   useTodayItems,
 } from "@/lib/items";
 import { useSettings } from "@/lib/settings";
+
+function DeepLinkHandler({
+  onItemFound,
+}: {
+  onItemFound: (id: string) => void;
+}) {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const deepLinkItemId = searchParams.get("item");
+
+  useEffect(() => {
+    if (!deepLinkItemId) return;
+    let cancelled = false;
+    void (async () => {
+      const item = await db.items.get(deepLinkItemId);
+      if (cancelled) return;
+      if (item) onItemFound(deepLinkItemId);
+      router.replace("/today");
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [deepLinkItemId, onItemFound, router]);
+
+  return null;
+}
 
 function greeting(hour: number): string {
   if (hour < 5) return "Good night";
@@ -67,6 +95,9 @@ export default function TodayPage() {
 
   return (
     <div className="mx-auto w-full max-w-[720px] px-6 py-8 md:px-12 md:py-12">
+      <Suspense fallback={null}>
+        <DeepLinkHandler onItemFound={setSelectedItemId} />
+      </Suspense>
       <header>
         <p className="text-sm text-muted">{dateLine}</p>
         <h1 className="mt-1 font-serif text-3xl text-foreground">{heading}</h1>

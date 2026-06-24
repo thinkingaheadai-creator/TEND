@@ -15,7 +15,10 @@ import { THEMES, type ThemeId } from "@/lib/themes";
 import { tap } from "@/lib/haptics";
 import Toggle from "@/components/Toggle";
 import {
+  cancelAllPush,
   fireNotification,
+  registerPushSubscription,
+  syncAllPush,
   useNotificationPermission,
   type PermissionState,
 } from "@/lib/notifications";
@@ -263,10 +266,14 @@ function NotificationsSection({ settings }: { settings: Settings }) {
     tap("light");
     const result = await request();
     if (result === "granted") {
+      await registerPushSubscription();
       await fireNotification({
         title: "Tend can now remind you.",
         tag: "tend-welcome",
       });
+      if (settings.notificationsEnabled) {
+        void syncAllPush();
+      }
     }
   }
 
@@ -300,7 +307,17 @@ function NotificationsSection({ settings }: { settings: Settings }) {
         <Toggle
           checked={settings.notificationsEnabled && granted}
           disabled={!granted}
-          onChange={(next) => saveSettings({ notificationsEnabled: next })}
+          onChange={(next) => {
+            saveSettings({ notificationsEnabled: next });
+            if (next) {
+              void (async () => {
+                await registerPushSubscription();
+                await syncAllPush();
+              })();
+            } else {
+              void cancelAllPush();
+            }
+          }}
           aria-label="Item reminders"
         />
       </Row>
@@ -309,9 +326,12 @@ function NotificationsSection({ settings }: { settings: Settings }) {
         <select
           value={settings.remindBeforeMinutes}
           disabled={!settings.notificationsEnabled || !granted}
-          onChange={(e) =>
-            saveSettings({ remindBeforeMinutes: parseInt(e.target.value, 10) })
-          }
+          onChange={(e) => {
+            saveSettings({ remindBeforeMinutes: parseInt(e.target.value, 10) });
+            if (settings.notificationsEnabled && granted) {
+              void syncAllPush();
+            }
+          }}
           className="rounded-md border border-line bg-surface px-2 py-1 text-base text-foreground outline-none disabled:opacity-40"
         >
           {remindOptions.map((opt) => (

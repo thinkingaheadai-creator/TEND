@@ -4,6 +4,7 @@ import { useLiveQuery } from "dexie-react-hooks";
 import { db, type Item } from "./db";
 import { uuid } from "./uuid";
 import { useDateKey } from "./clock";
+import { cancelPushForItem, syncPushForItem } from "./notifications";
 
 export async function addItem(
   partial: Partial<Item> & { title: string }
@@ -27,6 +28,7 @@ export async function addItem(
     console.error("Tend: write failed", "addItem", error);
     throw error;
   }
+  void syncPushForItem(item);
   return id;
 }
 
@@ -37,6 +39,7 @@ export async function completeItem(id: string): Promise<void> {
     console.error("Tend: write failed", "completeItem", error);
     throw error;
   }
+  void cancelPushForItem(id);
 }
 
 export async function uncompleteItem(id: string): Promise<void> {
@@ -46,9 +49,12 @@ export async function uncompleteItem(id: string): Promise<void> {
     console.error("Tend: write failed", "uncompleteItem", error);
     throw error;
   }
+  const item = await db.items.get(id);
+  if (item) void syncPushForItem(item);
 }
 
 export async function deleteItem(id: string): Promise<void> {
+  void cancelPushForItem(id);
   try {
     await db.items.delete(id);
   } catch (error) {
@@ -67,6 +73,8 @@ export async function updateItem(
     console.error("Tend: write failed", "updateItem", error);
     throw error;
   }
+  const item = await db.items.get(id);
+  if (item) void syncPushForItem(item);
 }
 
 export async function scheduleItem(id: string, dueAt: number): Promise<void> {
@@ -76,6 +84,8 @@ export async function scheduleItem(id: string, dueAt: number): Promise<void> {
     console.error("Tend: write failed", "scheduleItem", error);
     throw error;
   }
+  const item = await db.items.get(id);
+  if (item) void syncPushForItem(item);
 }
 
 export async function assignArea(id: string, area: string): Promise<void> {
@@ -85,6 +95,8 @@ export async function assignArea(id: string, area: string): Promise<void> {
     console.error("Tend: write failed", "assignArea", error);
     throw error;
   }
+  const item = await db.items.get(id);
+  if (item) void syncPushForItem(item);
 }
 
 export async function completeTracker(id: string): Promise<void> {
@@ -100,6 +112,7 @@ export async function completeTracker(id: string): Promise<void> {
     console.error("Tend: write failed", "completeTracker", error);
     throw error;
   }
+  void cancelPushForItem(id);
 }
 
 export async function uncompleteTracker(id: string): Promise<void> {

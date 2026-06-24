@@ -21,6 +21,29 @@ const serwist = new Serwist({
 
 serwist.addEventListeners();
 
+type PushPayload = { title: string; body: string; itemId?: string };
+
+self.addEventListener("push", (event: ExtendableEvent) => {
+  const pushEvent = event as PushEvent;
+  if (!pushEvent.data) return;
+  let payload: PushPayload = { title: "Tend", body: "" };
+  try {
+    payload = pushEvent.data.json() as PushPayload;
+  } catch {
+    payload = { title: "Tend", body: pushEvent.data.text() };
+  }
+  pushEvent.waitUntil(
+    self.registration.showNotification(payload.title, {
+      body: payload.body,
+      icon: "/icons/icon-192.png",
+      badge: "/icons/icon-192.png",
+      tag: payload.itemId,
+      data: { itemId: payload.itemId },
+      requireInteraction: false,
+    })
+  );
+});
+
 self.addEventListener("notificationclick", (event: ExtendableEvent) => {
   const notifEvent = event as NotificationEvent;
   notifEvent.notification.close();
