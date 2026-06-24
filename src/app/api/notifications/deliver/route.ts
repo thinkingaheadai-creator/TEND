@@ -1,6 +1,6 @@
 import { qstashReceiver } from "@/lib/server/qstash";
 import { redis } from "@/lib/server/redis";
-import { getWebPush } from "@/lib/server/webpush";
+import { sendWebPush } from "@/lib/server/webpush";
 
 type PushSubscriptionJSON = {
   endpoint: string;
@@ -64,7 +64,7 @@ export async function POST(request: Request): Promise<Response> {
   }
 
   try {
-    await getWebPush().sendNotification(
+    await sendWebPush(
       subscription,
       JSON.stringify({ title, body: messageBody, itemId }),
     );
