@@ -202,11 +202,19 @@ export async function syncPushForItem(
 
 export async function syncAllPush(): Promise<void> {
   const settings = getSettings();
+  if (!settings.notificationsEnabled) return;
+  if (typeof Notification === "undefined" || Notification.permission !== "granted") return;
+
   const items = await db.items.toArray();
-  for (const item of items) {
-    if (item.recurrence) continue;
-    if (item.completedAt) continue;
-    if (!item.dueAt) continue;
+  const now = Date.now();
+  const candidates = items.filter(
+    (i) =>
+      !i.recurrence &&
+      !i.completedAt &&
+      typeof i.dueAt === "number" &&
+      (i.dueAt - settings.remindBeforeMinutes * 60_000) > now,
+  );
+  for (const item of candidates) {
     await syncPushForItem(item, settings);
   }
 }
@@ -214,8 +222,8 @@ export async function syncAllPush(): Promise<void> {
 export async function cancelAllPush(): Promise<void> {
   const items = await db.items.toArray();
   for (const item of items) {
-    if (item.recurrence) continue;
-    if (!item.dueAt) continue;
-    await cancelPushForItem(item.id);
+    if (typeof item.dueAt === "number") {
+      await cancelPushForItem(item.id);
+    }
   }
 }
