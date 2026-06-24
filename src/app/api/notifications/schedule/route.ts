@@ -1,15 +1,13 @@
 import { qstash } from "@/lib/server/qstash";
 import { redis } from "@/lib/server/redis";
 
-function deliverUrl(): string | null {
-  const vercel = process.env.VERCEL_URL;
-  if (vercel) return `https://${vercel}/api/notifications/deliver`;
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL;
-  if (appUrl) {
-    const base = appUrl.replace(/\/+$/, "");
-    return `${base}/api/notifications/deliver`;
-  }
-  return null;
+function deliverUrl(): string {
+  const baseUrl =
+    process.env.NEXT_PUBLIC_APP_URL ||
+    (process.env.VERCEL_URL
+      ? `https://${process.env.VERCEL_URL}`
+      : "http://localhost:3000");
+  return `${baseUrl.replace(/\/+$/, "")}/api/notifications/deliver`;
 }
 
 const MAPPING_TTL_SECONDS = 60 * 60 * 24 * 30;
@@ -50,11 +48,6 @@ export async function POST(request: Request): Promise<Response> {
   }
 
   const url = deliverUrl();
-  if (!url) {
-    return new Response("server missing VERCEL_URL or NEXT_PUBLIC_APP_URL", {
-      status: 500,
-    });
-  }
 
   const mappingKey = `qstash-msg:${deviceId}:${itemId}`;
   const existing = await redis.get<string>(mappingKey);
