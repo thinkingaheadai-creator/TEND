@@ -17,6 +17,7 @@ import Toggle from "@/components/Toggle";
 import {
   cancelAllPush,
   fireNotification,
+  getDeviceId,
   registerPushSubscription,
   syncAllPush,
   useNotificationPermission,
@@ -54,6 +55,9 @@ export default function SettingsPage() {
 
       <div className="mt-8 pt-8 border-t border-line" />
       <AboutSection />
+
+      <div className="mt-8 pt-8 border-t border-line" />
+      <DiagnosticsSection />
     </div>
   );
 }
@@ -579,6 +583,117 @@ function AboutSection() {
       <p className="text-xs text-faint">
         Built with care · Local-first · Your data never leaves this device
       </p>
+    </section>
+  );
+}
+
+type DiagStatus = "pass" | "fail" | "skip";
+type DiagStep = { step: string; status: DiagStatus; detail: string };
+type DiagResult = { ok: boolean; steps: DiagStep[] };
+
+const TOTAL_CHECKS = 8;
+
+function DiagnosticsSection() {
+  const [running, setRunning] = useState(false);
+  const [result, setResult] = useState<DiagResult | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  async function handleRun() {
+    tap("light");
+    setRunning(true);
+    setResult(null);
+    setError(null);
+    try {
+      const res = await fetch("/api/notifications/diagnose", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ deviceId: getDeviceId() }),
+      });
+      if (!res.ok) {
+        throw new Error(`HTTP ${res.status} ${res.statusText}`);
+      }
+      const data = (await res.json()) as DiagResult;
+      setResult(data);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : String(e));
+    } finally {
+      setRunning(false);
+    }
+  }
+
+  const failCount = result
+    ? result.steps.filter((s) => s.status === "fail").length
+    : 0;
+  const step8Passed =
+    result?.steps.some(
+      (s) => s.step === "Send test push immediately" && s.status === "pass",
+    ) ?? false;
+
+  return (
+    <section>
+      <SectionLabel>DIAGNOSTICS</SectionLabel>
+      <button
+        type="button"
+        onClick={handleRun}
+        disabled={running}
+        className="rounded-full bg-surface-2 px-3 py-2 text-xs text-foreground disabled:opacity-50"
+      >
+        {running ? "Running…" : "Run push diagnostics"}
+      </button>
+
+      {error && (
+        <div className="mt-4 flex items-start gap-3">
+          <span className="mt-0.5 h-3 w-3 shrink-0 rounded-full bg-danger" />
+          <div>
+            <p className="text-sm text-foreground">
+              Diagnostic endpoint unreachable
+            </p>
+            <p className="text-xs text-muted">{error}</p>
+          </div>
+        </div>
+      )}
+
+      {result && (
+        <div className="mt-4">
+          <p
+            className={`text-sm ${
+              failCount === 0 ? "text-accent" : "text-danger"
+            }`}
+          >
+            {failCount === 0
+              ? `All ${TOTAL_CHECKS} checks passed`
+              : `${failCount} of ${TOTAL_CHECKS} checks failed`}
+          </p>
+
+          <div className="mt-3 flex flex-col gap-3">
+            {result.steps.map((s, i) => (
+              <div key={i} className="flex items-start gap-3">
+                <span
+                  className={`mt-0.5 h-3 w-3 shrink-0 rounded-full ${
+                    s.status === "pass"
+                      ? "bg-accent"
+                      : s.status === "fail"
+                        ? "bg-danger"
+                        : "bg-faint"
+                  }`}
+                />
+                <div>
+                  <p className="text-sm text-foreground">{s.step}</p>
+                  {s.detail && (
+                    <p className="text-xs text-muted">{s.detail}</p>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {step8Passed && (
+            <p className="mt-3 text-xs text-muted">
+              Step 8 sent a real push — check your phone.
+            </p>
+          )}
+        </div>
+      )}
     </section>
   );
 }
