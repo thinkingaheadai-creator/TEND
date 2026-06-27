@@ -213,13 +213,19 @@ export async function POST(request: Request): Promise<Response> {
   }
 
   // Step 7 — App URL valid HTTPS
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "";
-  const isHttps = appUrl.startsWith("https://");
-  const isLocalhost = /localhost|127\.0\.0\.1/.test(appUrl);
+  const rawAppUrl = process.env.NEXT_PUBLIC_APP_URL ?? "";
+  // Apply the same normalization the schedule route uses for QStash.
+  const normalizedAppUrl = rawAppUrl
+    ? /^https?:\/\//.test(rawAppUrl)
+      ? rawAppUrl.replace(/\/+$/, "")
+      : `https://${rawAppUrl.replace(/\/+$/, "")}`
+    : "";
+  const isHttps = normalizedAppUrl.startsWith("https://");
+  const isLocalhost = /localhost|127\.0\.0\.1/.test(normalizedAppUrl);
   steps.push({
     step: "App URL valid HTTPS",
     status: isHttps && !isLocalhost ? "pass" : "fail",
-    detail: appUrl || "(not set)",
+    detail: normalizedAppUrl || "(not set)",
   });
 
   // Step 8 — Send test push immediately

@@ -1,15 +1,6 @@
 import { qstash } from "@/lib/server/qstash";
 import { redis } from "@/lib/server/redis";
 
-function deliverUrl(): string {
-  const baseUrl =
-    process.env.NEXT_PUBLIC_APP_URL ||
-    (process.env.VERCEL_URL
-      ? `https://${process.env.VERCEL_URL}`
-      : "http://localhost:3000");
-  return `${baseUrl.replace(/\/+$/, "")}/api/notifications/deliver`;
-}
-
 const MAPPING_TTL_SECONDS = 60 * 60 * 24 * 30;
 const MAX_DELAY_MS = 7 * 24 * 60 * 60 * 1000; // QStash free tier max
 
@@ -63,7 +54,35 @@ export async function POST(request: Request): Promise<Response> {
     );
   }
 
-  const url = deliverUrl();
+  const rawBase =
+    process.env.NEXT_PUBLIC_APP_URL ||
+    (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "");
+
+  if (!rawBase) {
+    return Response.json(
+      { ok: false, error: "app url not configured" },
+      { status: 500 },
+    );
+  }
+
+  // Ensure https:// prefix (NEXT_PUBLIC_APP_URL might be stored without scheme)
+  const baseUrl = /^https?:\/\//.test(rawBase) ? rawBase : `https://${rawBase}`;
+  // Strip trailing slash to avoid double slashes
+  const cleanBase = baseUrl.replace(/\/+$/, "");
+  const url = `${cleanBase}/api/notifications/deliver`;
+
+  // Validate before sending to QStash
+  try {
+    new URL(url);
+  } catch {
+    return Response.json(
+      { ok: false, error: `invalid deliver url: ${url}` },
+      { status: 500 },
+    );
+  }
+
+  console.log("schedule: deliverUrl =", url);
+
   const mappingKey = `qstash-msg:${deviceId}:${itemId}`;
 
   try {
