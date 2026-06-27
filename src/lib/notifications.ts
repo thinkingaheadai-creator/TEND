@@ -227,10 +227,17 @@ export async function schedulePushForItem(opts: {
   const deviceId = getDeviceId();
   if (!deviceId) return;
   try {
-    await fetch("/api/notifications/schedule", {
+    console.log("[push] POSTing /api/notifications/schedule", {
+      itemId: opts.itemId,
+    });
+    const response = await fetch("/api/notifications/schedule", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ ...opts, deviceId }),
+    });
+    console.log("[push] schedule response", {
+      itemId: opts.itemId,
+      status: response.status,
     });
   } catch (e) {
     console.warn("Tend: schedule push failed", e);
@@ -259,17 +266,64 @@ export async function syncPushForItem(
   item: Item,
   settings: Settings = getSettings(),
 ): Promise<void> {
-  if (typeof window === "undefined") return;
-  if (!settings.notificationsEnabled) return cancelPushForItem(item.id);
-  if (!("Notification" in window)) return;
-  if (Notification.permission !== "granted") return cancelPushForItem(item.id);
-  if (item.recurrence) return cancelPushForItem(item.id);
-  if (item.completedAt) return cancelPushForItem(item.id);
-  if (!item.dueAt) return cancelPushForItem(item.id);
+  console.log("[push] syncPushForItem called", {
+    itemId: item.id,
+    title: item.title,
+    dueAt: item.dueAt,
+    completedAt: item.completedAt,
+    hasRecurrence: !!item.recurrence,
+    notificationsEnabled: settings.notificationsEnabled,
+    remindBeforeMinutes: settings.remindBeforeMinutes,
+    permission:
+      typeof Notification !== "undefined" ? Notification.permission : "n/a",
+  });
+
+  if (typeof window === "undefined") {
+    console.log("[push] skipping: window undefined");
+    return;
+  }
+  if (!settings.notificationsEnabled) {
+    console.log("[push] skipping: notificationsEnabled is false");
+    return cancelPushForItem(item.id);
+  }
+  if (!("Notification" in window)) {
+    console.log("[push] skipping: Notification API unsupported");
+    return;
+  }
+  if (Notification.permission !== "granted") {
+    console.log(
+      "[push] skipping: permission not granted, is",
+      Notification.permission,
+    );
+    return cancelPushForItem(item.id);
+  }
+  if (item.recurrence) {
+    console.log("[push] skipping: item is recurring");
+    return cancelPushForItem(item.id);
+  }
+  if (item.completedAt) {
+    console.log("[push] skipping: item is completed");
+    return cancelPushForItem(item.id);
+  }
+  if (!item.dueAt) {
+    console.log("[push] skipping: item has no dueAt");
+    return cancelPushForItem(item.id);
+  }
 
   const fireAt = item.dueAt - settings.remindBeforeMinutes * 60_000;
-  if (fireAt <= Date.now()) return cancelPushForItem(item.id);
+  if (fireAt <= Date.now()) {
+    console.log("[push] skipping: fireAt is in the past", {
+      fireAt,
+      now: Date.now(),
+    });
+    return cancelPushForItem(item.id);
+  }
 
+  console.log("[push] calling schedulePushForItem", {
+    itemId: item.id,
+    fireAt,
+    secondsFromNow: Math.round((fireAt - Date.now()) / 1000),
+  });
   await schedulePushForItem({
     itemId: item.id,
     dueAt: item.dueAt,

@@ -44,6 +44,11 @@ export default function QuickCapture({ open, onOpenChange }: Props) {
   const save = async () => {
     const trimmed = text.trim();
     if (!trimmed) return;
+    console.log("[capture] save called", {
+      trimmed,
+      parsedDueAt: parsed.dueAt,
+      ignoreDate,
+    });
     tap("medium");
     await addItem({
       title: ignoreDate ? trimmed : parsed.title,

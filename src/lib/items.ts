@@ -28,6 +28,10 @@ export async function addItem(
     console.error("Tend: write failed", "addItem", error);
     throw error;
   }
+  console.log("[capture] addItem completed, calling syncPushForItem", {
+    itemId: item.id,
+    dueAt: item.dueAt,
+  });
   void syncPushForItem(item);
   return id;
 }
