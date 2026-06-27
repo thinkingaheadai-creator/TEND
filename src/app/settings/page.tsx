@@ -16,8 +16,10 @@ import { tap } from "@/lib/haptics";
 import Toggle from "@/components/Toggle";
 import {
   cancelAllPush,
+  ensureSubscription,
   fireNotification,
   getDeviceId,
+  getLastSubscriptionError,
   registerPushSubscription,
   syncAllPush,
   useNotificationPermission,
@@ -315,7 +317,7 @@ function NotificationsSection({ settings }: { settings: Settings }) {
             saveSettings({ notificationsEnabled: next });
             if (next) {
               void (async () => {
-                await registerPushSubscription();
+                await ensureSubscription();
                 await syncAllPush();
               })();
             } else {
@@ -597,6 +599,24 @@ function DiagnosticsSection() {
   const [running, setRunning] = useState(false);
   const [result, setResult] = useState<DiagResult | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [reregistering, setReregistering] = useState(false);
+  const [reregisterMessage, setReregisterMessage] = useState<string | null>(null);
+
+  async function handleReregister() {
+    tap("light");
+    setReregistering(true);
+    setReregisterMessage(null);
+    try {
+      const ok = await ensureSubscription();
+      setReregisterMessage(
+        ok
+          ? "Subscription registered"
+          : getLastSubscriptionError() ?? "Subscription registration failed",
+      );
+    } finally {
+      setReregistering(false);
+    }
+  }
 
   async function handleRun() {
     tap("light");
@@ -604,6 +624,9 @@ function DiagnosticsSection() {
     setResult(null);
     setError(null);
     try {
+      // Give the diagnostics a fresh chance to pass by ensuring the backend
+      // has a current subscription before we test the chain.
+      await ensureSubscription();
       const res = await fetch("/api/notifications/diagnose", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -632,14 +655,36 @@ function DiagnosticsSection() {
   return (
     <section>
       <SectionLabel>DIAGNOSTICS</SectionLabel>
-      <button
-        type="button"
-        onClick={handleRun}
-        disabled={running}
-        className="rounded-full bg-surface-2 px-3 py-2 text-xs text-foreground disabled:opacity-50"
-      >
-        {running ? "Running…" : "Run push diagnostics"}
-      </button>
+      <div className="flex flex-wrap gap-2">
+        <button
+          type="button"
+          onClick={handleRun}
+          disabled={running}
+          className="rounded-full bg-surface-2 px-3 py-2 text-xs text-foreground disabled:opacity-50"
+        >
+          {running ? "Running…" : "Run push diagnostics"}
+        </button>
+        <button
+          type="button"
+          onClick={handleReregister}
+          disabled={reregistering}
+          className="rounded-full bg-surface-2 px-3 py-2 text-xs text-foreground disabled:opacity-50"
+        >
+          {reregistering ? "Registering…" : "Re-register subscription"}
+        </button>
+      </div>
+
+      {reregisterMessage && (
+        <p
+          className={`mt-3 text-xs ${
+            reregisterMessage === "Subscription registered"
+              ? "text-accent"
+              : "text-danger"
+          }`}
+        >
+          {reregisterMessage}
+        </p>
+      )}
 
       {error && (
         <div className="mt-4 flex items-start gap-3">
