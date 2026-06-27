@@ -62,12 +62,13 @@ export async function POST(request: Request): Promise<Response> {
 
   // Step 1 — Env vars present
   const missing = REQUIRED_ENV_VARS.filter((name) => !process.env[name]);
+  const vapidPublicLength = (process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY ?? "").length;
   steps.push({
     step: "Env vars present",
     status: missing.length === 0 ? "pass" : "fail",
     detail:
       missing.length === 0
-        ? `All ${REQUIRED_ENV_VARS.length} present`
+        ? `All ${REQUIRED_ENV_VARS.length} present (VAPID public key length ${vapidPublicLength})`
         : `Missing: ${missing.join(", ")}`,
   });
 
@@ -147,22 +148,51 @@ export async function POST(request: Request): Promise<Response> {
   }
 
   // Step 5 — VAPID keys valid format
-  try {
-    const subject = process.env.VAPID_SUBJECT ?? "";
-    const publicKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY ?? "";
-    const privateKey = process.env.VAPID_PRIVATE_KEY ?? "";
-    webpush.setVapidDetails(subject, publicKey, privateKey);
-    steps.push({
-      step: "VAPID keys valid format",
-      status: "pass",
-      detail: "setVapidDetails accepted the keys",
-    });
-  } catch (e) {
-    steps.push({
-      step: "VAPID keys valid format",
-      status: "fail",
-      detail: errorMessage(e),
-    });
+  {
+    const raw = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY ?? "";
+    const stats = {
+      length: raw.length,
+      firstSix: raw.slice(0, 6),
+      lastSix: raw.slice(-6),
+      hasEquals: raw.includes("="),
+      hasPlus: raw.includes("+"),
+      hasSlash: raw.includes("/"),
+      hasSpace: /\s/.test(raw),
+      hasQuote: raw.includes('"') || raw.includes("'"),
+    };
+
+    const malformed =
+      stats.hasEquals ||
+      stats.hasPlus ||
+      stats.hasSlash ||
+      stats.hasSpace ||
+      stats.hasQuote ||
+      ![86, 87, 88].includes(stats.length);
+
+    if (malformed) {
+      steps.push({
+        step: "VAPID keys valid format",
+        status: "fail",
+        detail: JSON.stringify(stats),
+      });
+    } else {
+      try {
+        const subject = process.env.VAPID_SUBJECT ?? "";
+        const privateKey = process.env.VAPID_PRIVATE_KEY ?? "";
+        webpush.setVapidDetails(subject, raw, privateKey);
+        steps.push({
+          step: "VAPID keys valid format",
+          status: "pass",
+          detail: `length ${stats.length}, no padding`,
+        });
+      } catch (e) {
+        steps.push({
+          step: "VAPID keys valid format",
+          status: "fail",
+          detail: `${errorMessage(e)} ${JSON.stringify(stats)}`,
+        });
+      }
+    }
   }
 
   // Step 6 — QStash reachable
