@@ -601,6 +601,50 @@ function DiagnosticsSection() {
   const [error, setError] = useState<string | null>(null);
   const [reregistering, setReregistering] = useState(false);
   const [reregisterMessage, setReregisterMessage] = useState<string | null>(null);
+  const [scheduling, setScheduling] = useState(false);
+  const [scheduleResult, setScheduleResult] = useState<
+    { ok: boolean; message: string } | null
+  >(null);
+
+  async function handleScheduledTest() {
+    tap("light");
+    setScheduling(true);
+    setScheduleResult(null);
+    try {
+      const dueAt = Date.now() + 90 * 1000;
+      const res = await fetch("/api/notifications/schedule", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          deviceId: getDeviceId(),
+          itemId: "diag-scheduled-" + Date.now(),
+          dueAt,
+          title: "Scheduled push test",
+          body: "Fired from diagnostics",
+          remindBeforeMinutes: 0,
+        }),
+      });
+      if (res.ok) {
+        setScheduleResult({
+          ok: true,
+          message: "Scheduled. Watch for notification in 90s.",
+        });
+      } else {
+        const body = await res.text().catch(() => "");
+        setScheduleResult({
+          ok: false,
+          message: `HTTP ${res.status} ${res.statusText} — ${body}`,
+        });
+      }
+    } catch (e) {
+      setScheduleResult({
+        ok: false,
+        message: e instanceof Error ? e.message : String(e),
+      });
+    } finally {
+      setScheduling(false);
+    }
+  }
 
   async function handleReregister() {
     tap("light");
@@ -672,7 +716,25 @@ function DiagnosticsSection() {
         >
           {reregistering ? "Registering…" : "Re-register subscription"}
         </button>
+        <button
+          type="button"
+          onClick={handleScheduledTest}
+          disabled={scheduling}
+          className="rounded-full bg-surface-2 px-3 py-2 text-xs text-foreground disabled:opacity-50"
+        >
+          {scheduling ? "Scheduling…" : "Send test push in 90s"}
+        </button>
       </div>
+
+      {scheduleResult && (
+        <p
+          className={`mt-3 text-xs ${
+            scheduleResult.ok ? "text-accent" : "text-danger"
+          }`}
+        >
+          {scheduleResult.message}
+        </p>
+      )}
 
       {reregisterMessage && (
         <p
