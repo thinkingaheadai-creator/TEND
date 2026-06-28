@@ -67,7 +67,7 @@ export default function ItemDetail({ id, onClose }: Props) {
         direction="right"
       >
         <Drawer.Portal>
-          <Drawer.Overlay className="fixed inset-0 z-[60] bg-black/60 backdrop-blur-sm" />
+          <Drawer.Overlay className="fixed inset-0 z-[60] bg-[var(--scrim)] backdrop-blur-sm" />
           <Drawer.Content
             className="fixed right-0 top-0 z-[70] flex h-screen w-[480px] flex-col border-l border-line bg-surface text-foreground shadow-2xl shadow-black/20 outline-none"
             style={{
@@ -89,7 +89,7 @@ export default function ItemDetail({ id, onClose }: Props) {
   return (
     <Drawer.Root open={open} onOpenChange={handleOpenChange}>
       <Drawer.Portal>
-        <Drawer.Overlay className="fixed inset-0 z-[60] bg-black/60 backdrop-blur-sm" />
+        <Drawer.Overlay className="fixed inset-0 z-[60] bg-[var(--scrim)] backdrop-blur-sm" />
         <Drawer.Content
           className="fixed bottom-0 left-0 right-0 z-[70] flex h-[85vh] flex-col rounded-t-2xl border-t border-line bg-surface text-foreground shadow-2xl shadow-black/20 outline-none"
           style={{

@@ -57,7 +57,7 @@ export default function NewTrackerForm({ open, onOpenChange }: Props) {
   return (
     <Drawer.Root open={open} onOpenChange={handleOpenChange}>
       <Drawer.Portal>
-        <Drawer.Overlay className="fixed inset-0 z-[60] bg-black/60 backdrop-blur-sm" />
+        <Drawer.Overlay className="fixed inset-0 z-[60] bg-[var(--scrim)] backdrop-blur-sm" />
         <Drawer.Content
           className="fixed bottom-0 left-0 right-0 z-[70] mt-24 flex max-h-[90vh] flex-col rounded-t-2xl border-t border-line bg-surface text-foreground outline-none md:left-1/2 md:right-auto md:bottom-auto md:top-1/2 md:max-h-[85vh] md:w-[560px] md:-translate-x-1/2 md:-translate-y-1/2 md:rounded-2xl md:border"
           style={{

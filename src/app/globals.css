@@ -52,6 +52,7 @@ header {
   --accent: #c9a96a;
   --accent-foreground: #1a1612;
   --danger: #a85a4a;
+  --scrim: rgb(0 0 0 / 0.6);
 }
 
 [data-theme="noir-maison"] {
@@ -66,6 +67,7 @@ header {
   --accent: #c9a96a;
   --accent-foreground: #1a1612;
   --danger: #a85a4a;
+  --scrim: rgb(0 0 0 / 0.6);
 }
 
 [data-theme="atelier"] {
@@ -80,6 +82,7 @@ header {
   --accent: #7a8870;
   --accent-foreground: #ffffff;
   --danger: #8b3a30;
+  --scrim: rgb(0 0 0 / 0.35);
 }
 
 [data-theme="bibliotheque"] {
@@ -94,6 +97,7 @@ header {
   --accent: #b08850;
   --accent-foreground: #1a1110;
   --danger: #6b1f24;
+  --scrim: rgb(0 0 0 / 0.6);
 }
 
 [data-theme="coutts"] {
@@ -108,6 +112,7 @@ header {
   --accent: #d4c4a0;
   --accent-foreground: #0a1422;
   --danger: #b85a5a;
+  --scrim: rgb(0 0 0 / 0.6);
 }
 
 [data-theme="hinoki"] {
@@ -122,6 +127,7 @@ header {
   --accent: #1f3f5e;
   --accent-foreground: #f4eee0;
   --danger: #8a3a30;
+  --scrim: rgb(0 0 0 / 0.35);
 }
 
 [data-theme="amangiri"] {
@@ -136,6 +142,7 @@ header {
   --accent: #b06848;
   --accent-foreground: #faf2e5;
   --danger: #8b3a25;
+  --scrim: rgb(0 0 0 / 0.35);
 }
 
 [data-theme="cartier-rouge"] {
@@ -150,6 +157,7 @@ header {
   --accent: #8b1d24;
   --accent-foreground: #f3e9da;
   --danger: #c44530;
+  --scrim: rgb(0 0 0 / 0.6);
 }
 
 [data-theme="monocle"] {
@@ -164,6 +172,7 @@ header {
   --accent: #c44530;
   --accent-foreground: #fbf9f3;
   --danger: #8b1d24;
+  --scrim: rgb(0 0 0 / 0.35);
 }
 
 [data-theme="glazed"] {
@@ -178,6 +187,7 @@ header {
   --accent: #c4a874;
   --accent-foreground: #1f1a14;
   --danger: #9a4a4a;
+  --scrim: rgb(0 0 0 / 0.35);
 }
 
 [data-theme="mocha"] {
@@ -192,6 +202,7 @@ header {
   --accent: #c89967;
   --accent-foreground: #2b1f17;
   --danger: #b85a3d;
+  --scrim: rgb(0 0 0 / 0.6);
 }
 
 [data-theme="sofia"] {
@@ -206,6 +217,7 @@ header {
   --accent: #4a6855;
   --accent-foreground: #ffffff;
   --danger: #94483a;
+  --scrim: rgb(0 0 0 / 0.35);
 }
 
 [data-theme="peony"] {
@@ -220,6 +232,7 @@ header {
   --accent: #c47a8a;
   --accent-foreground: #ffffff;
   --danger: #8b3a3a;
+  --scrim: rgb(0 0 0 / 0.35);
 }
 
 [data-theme="camellia"] {
@@ -234,6 +247,7 @@ header {
   --accent: #a83040;
   --accent-foreground: #f3ede0;
   --danger: #c44530;
+  --scrim: rgb(0 0 0 / 0.6);
 }
 
 [data-theme="marigold"] {
@@ -248,6 +262,7 @@ header {
   --accent: #cc7a2a;
   --accent-foreground: #fbf4e3;
   --danger: #8b3a25;
+  --scrim: rgb(0 0 0 / 0.35);
 }
 
 @theme inline {
