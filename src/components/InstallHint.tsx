@@ -1,5 +1,5 @@
 'use client';
-import { useEffect, useState } from 'react';
+import { useSyncExternalStore } from 'react';
 import { X } from 'lucide-react';
 
 type BIPEvent = Event & {
@@ -7,52 +7,94 @@ type BIPEvent = Event & {
   userChoice: Promise<{ outcome: 'accepted' | 'dismissed' }>;
 };
 
-export default function InstallHint() {
-  const [show, setShow] = useState(false);
-  const [variant, setVariant] = useState<'ios' | 'android' | null>(null);
-  const [deferred, setDeferred] = useState<BIPEvent | null>(null);
+type Variant = 'ios' | 'android' | null;
+type HintState = { show: boolean; variant: Variant };
 
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
+const HIDDEN: HintState = { show: false, variant: null };
+const DISMISS_KEY = 'tend.installHint.dismissed';
 
-    const dismissed = localStorage.getItem('tend.installHint.dismissed') === '1';
-    if (dismissed) return;
+// Module-level store so the install-hint decision is read via
+// useSyncExternalStore: the server snapshot is always hidden (matching SSR),
+// and the client switches to the real value after mount — same end-state as the
+// original effect, but without a synchronous setState inside an effect.
+let deferred: BIPEvent | null = null;
+let dismissed = false;
+let started = false;
+let snapshot: HintState = HIDDEN;
+const listeners = new Set<() => void>();
 
-    const isStandalone =
-      window.matchMedia('(display-mode: standalone)').matches ||
-      (window.navigator as unknown as { standalone?: boolean }).standalone === true;
-    if (isStandalone) return;
+function computeSnapshot(): HintState {
+  if (typeof window === 'undefined') return HIDDEN;
 
-    const ua = window.navigator.userAgent;
-    const isIOS = /iPad|iPhone|iPod/.test(ua);
+  if (dismissed || localStorage.getItem(DISMISS_KEY) === '1') return HIDDEN;
 
-    if (isIOS) {
-      setVariant('ios');
-      setShow(true);
-      return;
+  const isStandalone =
+    window.matchMedia('(display-mode: standalone)').matches ||
+    (window.navigator as unknown as { standalone?: boolean }).standalone === true;
+  if (isStandalone) return HIDDEN;
+
+  const isIOS = /iPad|iPhone|iPod/.test(window.navigator.userAgent);
+  if (isIOS) return { show: true, variant: 'ios' };
+
+  if (deferred) return { show: true, variant: 'android' };
+
+  return HIDDEN;
+}
+
+function emit() {
+  snapshot = computeSnapshot();
+  for (const l of listeners) l();
+}
+
+function onBeforeInstallPrompt(e: Event) {
+  e.preventDefault();
+  deferred = e as BIPEvent;
+  emit();
+}
+
+function subscribe(cb: () => void): () => void {
+  listeners.add(cb);
+  if (!started) {
+    started = true;
+    window.addEventListener('beforeinstallprompt', onBeforeInstallPrompt);
+    snapshot = computeSnapshot();
+  }
+  return () => {
+    listeners.delete(cb);
+    if (listeners.size === 0) {
+      window.removeEventListener('beforeinstallprompt', onBeforeInstallPrompt);
+      started = false;
     }
-
-    const handler = (e: Event) => {
-      e.preventDefault();
-      setDeferred(e as BIPEvent);
-      setVariant('android');
-      setShow(true);
-    };
-    window.addEventListener('beforeinstallprompt', handler);
-    return () => window.removeEventListener('beforeinstallprompt', handler);
-  }, []);
-
-  const dismiss = () => {
-    localStorage.setItem('tend.installHint.dismissed', '1');
-    setShow(false);
   };
+}
 
-  const install = async () => {
-    if (!deferred) return;
-    await deferred.prompt();
-    const { outcome } = await deferred.userChoice;
-    if (outcome === 'accepted') dismiss();
-  };
+function getSnapshot(): HintState {
+  return snapshot;
+}
+
+function getServerSnapshot(): HintState {
+  return HIDDEN;
+}
+
+function dismiss() {
+  dismissed = true;
+  if (typeof window !== 'undefined') localStorage.setItem(DISMISS_KEY, '1');
+  emit();
+}
+
+async function install() {
+  if (!deferred) return;
+  await deferred.prompt();
+  const { outcome } = await deferred.userChoice;
+  if (outcome === 'accepted') dismiss();
+}
+
+export default function InstallHint() {
+  const { show, variant } = useSyncExternalStore(
+    subscribe,
+    getSnapshot,
+    getServerSnapshot,
+  );
 
   if (!show) return null;
 
