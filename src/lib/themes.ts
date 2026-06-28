@@ -255,3 +255,10 @@ export const THEMES = [
 
 export type ThemeId = (typeof THEMES)[number]["id"];
 export const DEFAULT_THEME: ThemeId = "noir-maison";
+
+// Flat map of theme id → background hex, derived from THEMES (matches each
+// theme's --background). Used by the pre-hydration boot script to set
+// <meta name="theme-color"> on the first paint.
+export const THEME_BG: Record<string, string> = Object.fromEntries(
+  THEMES.map((t) => [t.id, t.tokens.bg]),
+);

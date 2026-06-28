@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import Shell from "@/components/Shell";
 import ThemeProvider from "@/components/ThemeProvider";
+import { THEME_BG } from "@/lib/themes";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -48,7 +49,7 @@ export const viewport: Viewport = {
   themeColor: "#0d0b09",
 };
 
-const themeBootScript = `(function(){try{var s=localStorage.getItem('tend.settings');var id='noir-maison';if(s){var p=JSON.parse(s);if(p&&p.themeId)id=p.themeId;}var valid=['noir-maison','atelier','bibliotheque','coutts','hinoki','amangiri','cartier-rouge','monocle','glazed','mocha','sofia','peony','camellia','marigold'];if(valid.indexOf(id)===-1)id='noir-maison';document.documentElement.setAttribute('data-theme',id);}catch(e){}})();`;
+const themeBootScript = `(function(){try{var bgMap=${JSON.stringify(THEME_BG)};var s=localStorage.getItem('tend.settings');var id='noir-maison';if(s){var p=JSON.parse(s);if(p&&p.themeId)id=p.themeId;}var valid=['noir-maison','atelier','bibliotheque','coutts','hinoki','amangiri','cartier-rouge','monocle','glazed','mocha','sofia','peony','camellia','marigold'];if(valid.indexOf(id)===-1)id='noir-maison';document.documentElement.setAttribute('data-theme',id);var c=bgMap[id];if(c){var m=document.querySelector('meta[name="theme-color"]');if(!m){m=document.createElement('meta');m.setAttribute('name','theme-color');document.head.appendChild(m);}m.setAttribute('content',c);}}catch(e){}})();`;
 
 export default function RootLayout({
   children,
