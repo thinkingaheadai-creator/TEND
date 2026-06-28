@@ -48,6 +48,12 @@ const REQUIRED_ENV_VARS = [
 ] as const;
 
 export async function POST(request: Request): Promise<Response> {
+  const diagHeader = request.headers.get("x-tend-diag");
+  const isDev = process.env.NODE_ENV === "development";
+  if (!isDev && diagHeader !== process.env.DIAG_SECRET) {
+    return new Response("not found", { status: 404 });
+  }
+
   let body: { deviceId?: unknown };
   try {
     body = (await request.json()) as typeof body;

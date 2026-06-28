@@ -29,6 +29,11 @@ import {
 export default function SettingsPage() {
   const settings = useSettings();
 
+  const showDiagnostics =
+    process.env.NODE_ENV === "development" ||
+    (typeof window !== "undefined" &&
+      new URLSearchParams(window.location.search).get("diag") === "1");
+
   return (
     <div className="mx-auto w-full max-w-[720px] px-6 py-8 md:px-12 md:py-12">
       <header>
@@ -58,8 +63,12 @@ export default function SettingsPage() {
       <div className="mt-8 pt-8 border-t border-line" />
       <AboutSection />
 
-      <div className="mt-8 pt-8 border-t border-line" />
-      <DiagnosticsSection />
+      {showDiagnostics && (
+        <>
+          <div className="mt-8 pt-8 border-t border-line" />
+          <DiagnosticsSection />
+        </>
+      )}
     </div>
   );
 }
@@ -673,7 +682,10 @@ function DiagnosticsSection() {
       await ensureSubscription();
       const res = await fetch("/api/notifications/diagnose", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          "x-tend-diag": process.env.NEXT_PUBLIC_DIAG_SECRET ?? "",
+        },
         body: JSON.stringify({ deviceId: getDeviceId() }),
       });
       if (!res.ok) {
