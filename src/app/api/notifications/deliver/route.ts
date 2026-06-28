@@ -1,3 +1,4 @@
+import { debug } from "@/lib/debug";
 import { qstashReceiver } from "@/lib/server/qstash";
 import { redis } from "@/lib/server/redis";
 import { sendWebPush } from "@/lib/server/webpush";
@@ -38,7 +39,7 @@ export async function POST(request: Request): Promise<Response> {
     valid = false;
   }
   if (!valid) {
-    console.log("deliver: invalid signature");
+    debug.log("deliver: invalid signature");
     return new Response("invalid signature", { status: 401 });
   }
 
@@ -46,7 +47,7 @@ export async function POST(request: Request): Promise<Response> {
   try {
     payload = JSON.parse(bodyText) as typeof payload;
   } catch {
-    console.log("deliver: invalid json");
+    debug.log("deliver: invalid json");
     return new Response("ok", { status: 200 });
   }
 
@@ -55,10 +56,10 @@ export async function POST(request: Request): Promise<Response> {
   const title = typeof payload.title === "string" ? payload.title : "";
   const messageBody = typeof payload.body === "string" ? payload.body : "";
 
-  console.log("deliver: received", { deviceId, itemId });
+  debug.log("deliver: received", { deviceId, itemId });
 
   if (!deviceId || !itemId || !title) {
-    console.log("deliver: missing fields", { deviceId, itemId, hasTitle: !!title });
+    debug.log("deliver: missing fields", { deviceId, itemId, hasTitle: !!title });
     return new Response("ok", { status: 200 });
   }
 
@@ -75,11 +76,11 @@ export async function POST(request: Request): Promise<Response> {
   }
 
   if (!subscription) {
-    console.log("deliver: no subscription for deviceId", deviceId);
+    debug.log("deliver: no subscription for deviceId", deviceId);
     return new Response("ok", { status: 200 });
   }
 
-  console.log("deliver: subscription found", {
+  debug.log("deliver: subscription found", {
     deviceId,
     endpointHost: endpointHost(subscription.endpoint),
   });
@@ -89,11 +90,11 @@ export async function POST(request: Request): Promise<Response> {
       subscription,
       JSON.stringify({ title, body: messageBody, itemId }),
     );
-    console.log("deliver: web-push success", { deviceId, itemId });
+    debug.log("deliver: web-push success", { deviceId, itemId });
   } catch (e) {
     if (isWebPushError(e) && (e.statusCode === 404 || e.statusCode === 410)) {
       await redis.del(`subscription:${deviceId}`);
-      console.log("deliver: subscription expired (410), removed", {
+      debug.log("deliver: subscription expired (410), removed", {
         deviceId,
         statusCode: e.statusCode,
       });
@@ -102,7 +103,7 @@ export async function POST(request: Request): Promise<Response> {
     const statusCode = isWebPushError(e) ? e.statusCode : null;
     const body = isWebPushError(e) ? e.body : undefined;
     const message = e instanceof Error ? e.message : String(e);
-    console.log("deliver: web-push failed", { deviceId, itemId, statusCode, body, message });
+    debug.log("deliver: web-push failed", { deviceId, itemId, statusCode, body, message });
     return new Response("ok", { status: 200 });
   }
 

@@ -1,3 +1,4 @@
+import { debug } from "@/lib/debug";
 import { redis } from "@/lib/server/redis";
 
 type PushSubscriptionJSON = {
@@ -33,7 +34,7 @@ export async function POST(request: Request): Promise<Response> {
 
     await redis.set(`subscription:${deviceId}`, subscription);
 
-    console.log("subscribe: stored", {
+    debug.log("subscribe: stored", {
       deviceId,
       endpoint: subscription.endpoint,
     });

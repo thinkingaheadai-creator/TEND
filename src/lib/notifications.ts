@@ -2,6 +2,7 @@
 
 import { useSyncExternalStore } from "react";
 import { db, type Item } from "./db";
+import { debug } from "./debug";
 import { getSettings, type Settings } from "./settings";
 import { uuid } from "./uuid";
 
@@ -116,7 +117,7 @@ async function postSubscriptionToBackend(
   sub: PushSubscription,
 ): Promise<void> {
   const endpoint = sub.endpoint;
-  console.log(
+  debug.log(
     `subscribe: POSTing to /api/notifications/subscribe with deviceId=${deviceId}`,
   );
   const res = await fetch("/api/notifications/subscribe", {
@@ -124,7 +125,7 @@ async function postSubscriptionToBackend(
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ deviceId, subscription: sub.toJSON() }),
   });
-  console.log(`subscribe: backend responded with status=${res.status}`);
+  debug.log(`subscribe: backend responded with status=${res.status}`);
   if (!res.ok) {
     const body = await res.text().catch(() => "");
     throw new Error(
@@ -152,7 +153,7 @@ async function subscribeAndPost(): Promise<void> {
     throw new Error("subscribe: NEXT_PUBLIC_VAPID_PUBLIC_KEY not configured");
   }
 
-  console.log("subscribe: requesting permission and registering");
+  debug.log("subscribe: requesting permission and registering");
   const reg = await navigator.serviceWorker.ready;
   let sub = await reg.pushManager.getSubscription();
   if (!sub) {
@@ -166,7 +167,7 @@ async function subscribeAndPost(): Promise<void> {
       throw toError(e);
     }
   }
-  console.log(`subscribe: pushManager.subscribe succeeded, endpoint=${sub.endpoint}`);
+  debug.log(`subscribe: pushManager.subscribe succeeded, endpoint=${sub.endpoint}`);
 
   await postSubscriptionToBackend(getDeviceId(), sub);
 }
@@ -202,10 +203,10 @@ export async function ensureSubscription(): Promise<boolean> {
     const reg = await navigator.serviceWorker.ready;
     const existing = await reg.pushManager.getSubscription();
     if (existing) {
-      console.log("ensureSubscription: existing local subscription found, re-POSTing");
+      debug.log("ensureSubscription: existing local subscription found, re-POSTing");
       await postSubscriptionToBackend(getDeviceId(), existing);
     } else {
-      console.log("ensureSubscription: no local subscription, creating a new one");
+      debug.log("ensureSubscription: no local subscription, creating a new one");
       await subscribeAndPost();
     }
     lastSubscriptionError = null;
