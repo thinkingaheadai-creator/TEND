@@ -10,6 +10,7 @@ import { AREAS } from "@/lib/areas";
 import { startOfToday, thisWeekend, tomorrow } from "@/lib/dates";
 import { relativeTime } from "@/lib/time";
 import { useIsDesktop } from "@/lib/responsive";
+import { tap } from "@/lib/haptics";
 
 type Props = { item: Item; onOpen?: (id: string) => void };
 
@@ -194,8 +195,11 @@ export default function InboxRow({ item, onOpen }: Props) {
     <div className="group flex items-start gap-3 rounded-md border-b border-line px-2 py-3 transition-colors hover:bg-surface">
       <button
         type="button"
-        onClick={() => onOpen?.(item.id)}
-        className="min-w-0 flex-1 text-left"
+        onClick={() => {
+          tap("light");
+          onOpen?.(item.id);
+        }}
+        className="flex min-h-[44px] min-w-0 flex-1 flex-col justify-center text-left"
       >
         <p className="truncate text-base text-foreground">{item.title}</p>
         <p className="mt-0.5 text-xs text-faint">
@@ -212,7 +216,10 @@ export default function InboxRow({ item, onOpen }: Props) {
             <ChipButton
               icon={<Calendar size={14} strokeWidth={1.75} />}
               label="Schedule"
-              onClick={() => setScheduleOpen(true)}
+              onClick={() => {
+                tap("light");
+                setScheduleOpen(true);
+              }}
               aria-label="Schedule"
             />
           }
@@ -228,7 +235,10 @@ export default function InboxRow({ item, onOpen }: Props) {
             <ChipButton
               icon={<Tag size={14} strokeWidth={1.75} />}
               label="Area"
-              onClick={() => setAreaOpen(true)}
+              onClick={() => {
+                tap("light");
+                setAreaOpen(true);
+              }}
               aria-label="Assign area"
             />
           }

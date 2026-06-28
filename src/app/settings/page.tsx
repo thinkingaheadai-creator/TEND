@@ -323,6 +323,7 @@ function NotificationsSection({ settings }: { settings: Settings }) {
           checked={settings.notificationsEnabled && granted}
           disabled={!granted}
           onChange={(next) => {
+            tap("light");
             saveSettings({ notificationsEnabled: next });
             if (next) {
               void (async () => {
@@ -360,7 +361,10 @@ function NotificationsSection({ settings }: { settings: Settings }) {
       <Row label="Morning ritual">
         <Toggle
           checked={settings.morningRitualEnabled}
-          onChange={(next) => saveSettings({ morningRitualEnabled: next })}
+          onChange={(next) => {
+            tap("light");
+            saveSettings({ morningRitualEnabled: next });
+          }}
           aria-label="Morning ritual"
         />
       </Row>
@@ -381,7 +385,10 @@ function NotificationsSection({ settings }: { settings: Settings }) {
       <Row label="Evening ritual">
         <Toggle
           checked={settings.eveningRitualEnabled}
-          onChange={(next) => saveSettings({ eveningRitualEnabled: next })}
+          onChange={(next) => {
+            tap("light");
+            saveSettings({ eveningRitualEnabled: next });
+          }}
           aria-label="Evening ritual"
         />
       </Row>

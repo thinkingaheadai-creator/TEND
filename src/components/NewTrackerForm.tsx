@@ -5,6 +5,7 @@ import { useEffect, useRef, useState } from "react";
 import { addItem } from "@/lib/items";
 import { AREAS } from "@/lib/areas";
 import type { Recurrence } from "@/lib/recurrence";
+import { tap } from "@/lib/haptics";
 import RecurrencePicker from "./RecurrencePicker";
 
 type Props = {
@@ -122,7 +123,10 @@ export default function NewTrackerForm({ open, onOpenChange }: Props) {
           <div className="mt-6 flex shrink-0 justify-end border-t border-line px-6 pt-4">
             <button
               type="button"
-              onClick={save}
+              onClick={() => {
+                tap("light");
+                void save();
+              }}
               disabled={!canSave}
               className="rounded-full bg-accent px-5 py-2 text-sm font-medium text-accent-foreground transition-opacity disabled:opacity-40"
             >

@@ -129,7 +129,7 @@ export default function InstallHint() {
           type="button"
           onClick={dismiss}
           aria-label="Dismiss"
-          className="rounded-full p-1 text-muted hover:bg-surface-2"
+          className="flex min-h-[44px] min-w-[44px] items-center justify-center rounded-full p-1 text-muted hover:bg-surface-2"
         >
           <X className="h-4 w-4" />
         </button>

@@ -9,6 +9,7 @@ import MonthView from "@/components/MonthView";
 import WeekView from "@/components/WeekView";
 import { startOfWeekFor } from "@/lib/calendar";
 import { useIsDesktop } from "@/lib/responsive";
+import { tap } from "@/lib/haptics";
 
 type CalendarView = "agenda" | "week" | "month";
 
@@ -92,9 +93,12 @@ export default function CalendarPage() {
         <div className="mt-4 flex items-center gap-2">
           <button
             type="button"
-            onClick={handlePrev}
+            onClick={() => {
+              tap("light");
+              handlePrev();
+            }}
             aria-label="Previous"
-            className="flex h-8 w-8 items-center justify-center rounded-full text-muted hover:bg-surface hover:text-foreground"
+            className="flex min-h-[44px] min-w-[44px] items-center justify-center rounded-full text-muted hover:bg-surface hover:text-foreground"
           >
             <ChevronLeft size={18} strokeWidth={1.75} />
           </button>
@@ -107,9 +111,12 @@ export default function CalendarPage() {
           </button>
           <button
             type="button"
-            onClick={handleNext}
+            onClick={() => {
+              tap("light");
+              handleNext();
+            }}
             aria-label="Next"
-            className="flex h-8 w-8 items-center justify-center rounded-full text-muted hover:bg-surface hover:text-foreground"
+            className="flex min-h-[44px] min-w-[44px] items-center justify-center rounded-full text-muted hover:bg-surface hover:text-foreground"
           >
             <ChevronRight size={18} strokeWidth={1.75} />
           </button>
@@ -171,7 +178,10 @@ function ViewToggle({
             type="button"
             role="radio"
             aria-checked={active}
-            onClick={() => onChange(opt.value)}
+            onClick={() => {
+              tap("light");
+              onChange(opt.value);
+            }}
             className={`min-h-[44px] rounded-full px-3 py-1 transition-colors md:min-h-0 ${
               active
                 ? "bg-accent text-accent-foreground"
