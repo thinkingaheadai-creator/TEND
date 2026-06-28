@@ -1,3 +1,4 @@
+import { debug } from "@/lib/debug";
 import { qstash } from "@/lib/server/qstash";
 import { redis } from "@/lib/server/redis";
 
@@ -36,7 +37,7 @@ export async function POST(request: Request): Promise<Response> {
 
   const fireAt = dueAt - remindBeforeMinutes * 60_000;
 
-  console.log("schedule: received", { itemId, dueAt, remindBeforeMinutes, fireAt });
+  debug.log("schedule: received", { itemId, dueAt, remindBeforeMinutes, fireAt });
 
   if (fireAt <= Date.now()) {
     return new Response("too soon, won't schedule", { status: 400 });
@@ -44,7 +45,7 @@ export async function POST(request: Request): Promise<Response> {
 
   const delayMs = fireAt - Date.now();
   if (delayMs > MAX_DELAY_MS) {
-    console.log("schedule: skipped (too-far)", {
+    debug.log("schedule: skipped (too-far)", {
       itemId,
       daysOut: Math.round(delayMs / 86_400_000),
     });
@@ -81,7 +82,7 @@ export async function POST(request: Request): Promise<Response> {
     );
   }
 
-  console.log("schedule: deliverUrl =", url);
+  debug.log("schedule: deliverUrl =", url);
 
   const mappingKey = `qstash-msg:${deviceId}:${itemId}`;
 
@@ -109,7 +110,7 @@ export async function POST(request: Request): Promise<Response> {
 
     await redis.set(mappingKey, messageId, { ex: MAPPING_TTL_SECONDS });
 
-    console.log("schedule: queued", { itemId, messageId, fireAt });
+    debug.log("schedule: queued", { itemId, messageId, fireAt });
     return Response.json({ ok: true, messageId, fireAt });
   } catch (err) {
     console.error("schedule: failed", { itemId, error: String(err) });

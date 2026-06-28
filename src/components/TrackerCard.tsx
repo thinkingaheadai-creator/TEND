@@ -51,7 +51,10 @@ export default function TrackerCard({ item, onOpen }: Props) {
       role="button"
       tabIndex={0}
       aria-label={`Open ${item.title}`}
-      onClick={() => onOpen?.(item.id)}
+      onClick={() => {
+        tap("light");
+        onOpen?.(item.id);
+      }}
       onKeyDown={(e) => {
         if (e.key === "Enter" || e.key === " ") {
           e.preventDefault();

@@ -13,6 +13,7 @@ import { endOfDay, format, startOfDay } from "date-fns";
 import { useMemo } from "react";
 import { daysOfWeek, formatHour, sameDay } from "@/lib/calendar";
 import { updateItem, useItemsBetween } from "@/lib/items";
+import { tap } from "@/lib/haptics";
 import type { Item } from "@/lib/db";
 
 const HOUR_START = 6;
@@ -242,11 +243,12 @@ function ItemCard({
       style={style}
       {...(draggable ? listeners : {})}
       {...(draggable ? attributes : {})}
-      className={`mb-1 rounded-lg border border-line bg-surface-2 px-2 py-1.5 ${
+      className={`mb-1 flex min-h-[44px] flex-col justify-center rounded-lg border border-line bg-surface-2 px-2 py-1.5 ${
         draggable ? "cursor-grab active:cursor-grabbing" : ""
       } ${absolute ? "shadow-sm" : ""}`}
       onClick={(e) => {
         if (isDragging) return;
+        tap("light");
         e.stopPropagation();
         onOpenItem(item.id);
       }}

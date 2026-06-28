@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import type { Recurrence } from "@/lib/recurrence";
+import { tap } from "@/lib/haptics";
 
 type Kind = Recurrence["kind"];
 
@@ -118,8 +119,11 @@ export default function RecurrencePicker({ value, onChange }: Props) {
                 <button
                   key={i}
                   type="button"
-                  onClick={() => toggleWeekday(i)}
-                  className={`flex h-9 w-9 items-center justify-center rounded-full text-xs transition-colors ${
+                  onClick={() => {
+                    tap("light");
+                    toggleWeekday(i);
+                  }}
+                  className={`flex min-h-[44px] min-w-[44px] items-center justify-center rounded-full text-xs transition-colors ${
                     active
                       ? "bg-accent text-accent-foreground"
                       : "border border-line-strong text-muted hover:text-foreground"

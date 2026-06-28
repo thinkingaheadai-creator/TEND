@@ -4,6 +4,7 @@ import { endOfDay, format, isSameMonth, startOfDay } from "date-fns";
 import { useMemo } from "react";
 import { daysOfMonthGrid, sameDay } from "@/lib/calendar";
 import { useItemsBetween } from "@/lib/items";
+import { tap } from "@/lib/haptics";
 import type { Item } from "@/lib/db";
 
 type Props = {
@@ -56,7 +57,10 @@ export default function MonthView({ focusDate, isDesktop, onSelectDay }: Props) 
             <button
               key={key}
               type="button"
-              onClick={() => onSelectDay(day)}
+              onClick={() => {
+                tap("light");
+                onSelectDay(day);
+              }}
               className="rounded-sm bg-bg p-1 text-left transition-colors hover:bg-surface"
               style={{
                 minHeight: isDesktop ? "96px" : "56px",

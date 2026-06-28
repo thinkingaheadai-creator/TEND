@@ -110,8 +110,11 @@ export default function ItemRow({ item, variant, onOpen }: Props) {
       </button>
       <button
         type="button"
-        onClick={() => onOpen?.(item.id)}
-        className={`flex-1 truncate text-left text-[15px] transition-colors duration-200 ${titleClass}`}
+        onClick={() => {
+          tap("light");
+          onOpen?.(item.id);
+        }}
+        className={`flex min-h-[44px] flex-1 items-center truncate text-left text-[15px] transition-colors duration-200 ${titleClass}`}
       >
         {item.title}
       </button>

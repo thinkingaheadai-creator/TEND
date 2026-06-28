@@ -67,7 +67,7 @@ export default function ItemDetail({ id, onClose }: Props) {
         direction="right"
       >
         <Drawer.Portal>
-          <Drawer.Overlay className="fixed inset-0 z-[60] bg-black/60 backdrop-blur-sm" />
+          <Drawer.Overlay className="fixed inset-0 z-[60] bg-[var(--scrim)] backdrop-blur-sm" />
           <Drawer.Content
             className="fixed right-0 top-0 z-[70] flex h-screen w-[480px] flex-col border-l border-line bg-surface text-foreground shadow-2xl shadow-black/20 outline-none"
             style={{
@@ -89,7 +89,7 @@ export default function ItemDetail({ id, onClose }: Props) {
   return (
     <Drawer.Root open={open} onOpenChange={handleOpenChange}>
       <Drawer.Portal>
-        <Drawer.Overlay className="fixed inset-0 z-[60] bg-black/60 backdrop-blur-sm" />
+        <Drawer.Overlay className="fixed inset-0 z-[60] bg-[var(--scrim)] backdrop-blur-sm" />
         <Drawer.Content
           className="fixed bottom-0 left-0 right-0 z-[70] flex h-[85vh] flex-col rounded-t-2xl border-t border-line bg-surface text-foreground shadow-2xl shadow-black/20 outline-none"
           style={{
@@ -148,7 +148,10 @@ function DetailContent({ item, onClose }: ContentProps) {
       <div className="flex shrink-0 items-center justify-between px-4 py-2">
         <button
           type="button"
-          onClick={onClose}
+          onClick={() => {
+            tap("light");
+            onClose();
+          }}
           aria-label="Close"
           className="flex h-11 w-11 items-center justify-center rounded-full text-muted hover:bg-surface-2 hover:text-foreground"
         >
@@ -270,14 +273,16 @@ function WhenSection({ item }: { item: Item }) {
           {item.dueAt != null ? (
             <button
               type="button"
-              className="rounded-full bg-surface-2 px-3 py-1 text-xs text-foreground hover:bg-line transition-colors"
+              onClick={() => tap("light")}
+              className="inline-flex min-h-[44px] items-center rounded-full bg-surface-2 px-3 py-1 text-xs text-foreground hover:bg-line transition-colors"
             >
               {formatDate(item.dueAt)}
             </button>
           ) : (
             <button
               type="button"
-              className="font-serif text-sm italic text-faint hover:text-muted"
+              onClick={() => tap("light")}
+              className="inline-flex min-h-[44px] items-center font-serif text-sm italic text-faint hover:text-muted"
             >
               No date
             </button>
@@ -356,14 +361,16 @@ function RepeatsSection({ item }: { item: Item }) {
           {recurrence ? (
             <button
               type="button"
-              className="text-sm text-foreground hover:text-accent"
+              onClick={() => tap("light")}
+              className="inline-flex min-h-[44px] items-center text-sm text-foreground hover:text-accent"
             >
               {describeRecurrence(recurrence)}
             </button>
           ) : (
             <button
               type="button"
-              className="font-serif text-sm italic text-faint hover:text-muted"
+              onClick={() => tap("light")}
+              className="inline-flex min-h-[44px] items-center font-serif text-sm italic text-faint hover:text-muted"
             >
               Doesn&apos;t repeat
             </button>

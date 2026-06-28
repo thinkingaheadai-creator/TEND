@@ -120,6 +120,7 @@ export default function Shell({ children }: { children: React.ReactNode }) {
               <li key={href} className="flex-1">
                 <Link
                   href={href}
+                  onClick={() => tap("light")}
                   className={`flex min-h-[44px] flex-col items-center justify-center gap-1 rounded-2xl px-2 py-3 text-[11px] transition-colors ${
                     active
                       ? "bg-surface-2 text-foreground"

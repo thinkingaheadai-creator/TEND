@@ -6,6 +6,7 @@ import NewTrackerForm from "@/components/NewTrackerForm";
 import ItemDetail from "@/components/ItemDetail";
 import { addItem, useTrackers } from "@/lib/items";
 import { isCompletedForCurrentPeriod } from "@/lib/recurrence";
+import { tap } from "@/lib/haptics";
 import type { Recurrence } from "@/lib/recurrence";
 import type { Item } from "@/lib/db";
 
@@ -77,8 +78,11 @@ export default function TrackersPage() {
         </div>
         <button
           type="button"
-          onClick={() => setFormOpen(true)}
-          className="shrink-0 rounded-full bg-surface-2 px-3 py-1.5 text-xs text-foreground transition-colors hover:bg-line"
+          onClick={() => {
+            tap("light");
+            setFormOpen(true);
+          }}
+          className="inline-flex min-h-[44px] min-w-[44px] shrink-0 items-center justify-center rounded-full bg-surface-2 px-3 py-1.5 text-xs text-foreground transition-colors hover:bg-line"
         >
           + New tracker
         </button>
