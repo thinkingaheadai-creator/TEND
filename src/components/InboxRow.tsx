@@ -168,8 +168,9 @@ function ActionMenu({
         <Drawer.Portal>
           <Drawer.Overlay className="fixed inset-0 z-[60] bg-[var(--scrim)] backdrop-blur-sm" />
           <Drawer.Content
-            className="fixed bottom-0 left-0 right-0 z-[70] mt-24 flex flex-col rounded-t-2xl border-t border-line bg-surface outline-none"
+            className="fixed bottom-0 left-0 right-0 z-[70] mt-24 flex max-h-[calc(100dvh-env(safe-area-inset-top))] flex-col rounded-t-2xl border-t border-line bg-surface outline-none"
             style={{
+              paddingTop: "env(safe-area-inset-top)",
               paddingBottom: "calc(1rem + env(safe-area-inset-bottom))",
             }}
           >
