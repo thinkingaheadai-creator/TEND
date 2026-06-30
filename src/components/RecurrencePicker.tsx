@@ -14,6 +14,12 @@ const KINDS: { id: Kind; label: string }[] = [
   { id: "after-completion", label: "After completion" },
 ];
 
+// Max days for a given month index. 2000 is a leap year, so February
+// returns 29 — yearly recurrences can legitimately land on Feb 29.
+function daysInMonth(month: number): number {
+  return new Date(2000, month + 1, 0).getDate();
+}
+
 const DAY_LABELS = ["S", "M", "T", "W", "T", "F", "S"];
 const MONTH_LABELS = [
   "Jan",
@@ -36,6 +42,10 @@ type Props = {
 };
 
 export default function RecurrencePicker({ value, onChange }: Props) {
+  console.log("[picker-debug] render", {
+    valueProp: value,
+    kind: value?.kind,
+  });
   const [kind, setKind] = useState<Kind>(value?.kind ?? "daily");
   const [weekdays, setWeekdays] = useState<number[]>(
     value?.kind === "weekly" ? value.weekdays : [1, 3, 5]
@@ -46,14 +56,46 @@ export default function RecurrencePicker({ value, onChange }: Props) {
   const [yearMonth, setYearMonth] = useState(
     value?.kind === "yearly" ? value.month : new Date().getMonth()
   );
-  const [yearDay, setYearDay] = useState(
-    value?.kind === "yearly" ? value.day : new Date().getDate()
-  );
+  const [yearDay, setYearDay] = useState(() => {
+    const initial = value?.kind === "yearly" ? value.day : new Date().getDate();
+    console.log("[picker-debug] yearDay init", { initial, valueAtInit: value });
+    return initial;
+  });
   const [intervalDays, setIntervalDays] = useState(
     value?.kind === "after-completion" ? value.intervalDays : 3
   );
 
+  // The DAY inputs hold raw text while editing so the field reflects exactly
+  // what the user typed (including a temporarily empty string). The numeric
+  // state above is only committed on blur, where we clamp to a valid day.
+  const [dayOfMonthInput, setDayOfMonthInput] = useState(String(dayOfMonth));
+  const [yearDayInput, setYearDayInput] = useState(() => {
+    const initial = String(yearDay);
+    console.log("[picker-debug] yearDayInput init", { initial });
+    return initial;
+  });
+
+  function commitDay(
+    raw: string,
+    current: number,
+    max: number,
+    setValue: (n: number) => void,
+    setText: (s: string) => void
+  ) {
+    const n = parseInt(raw, 10);
+    const clamped = isNaN(n) ? current : Math.min(Math.max(n, 1), max);
+    setValue(clamped);
+    setText(String(clamped));
+  }
+
   useEffect(() => {
+    console.log("[picker-debug] effect fired: push state -> onChange", {
+      kind,
+      dayOfMonth,
+      yearMonth,
+      yearDay,
+      intervalDays,
+    });
     let next: Recurrence | null = null;
     switch (kind) {
       case "daily":
@@ -143,14 +185,15 @@ export default function RecurrencePicker({ value, onChange }: Props) {
             Day of month
           </p>
           <input
-            type="number"
-            min={1}
-            max={31}
-            value={dayOfMonth}
+            type="text"
+            inputMode="numeric"
+            pattern="[0-9]*"
+            value={dayOfMonthInput}
             onChange={(e) =>
-              setDayOfMonth(
-                Math.max(1, Math.min(31, Number(e.target.value) || 1))
-              )
+              setDayOfMonthInput(e.target.value.replace(/[^0-9]/g, "").slice(0, 2))
+            }
+            onBlur={() =>
+              commitDay(dayOfMonthInput, dayOfMonth, 31, setDayOfMonth, setDayOfMonthInput)
             }
             className="w-20 rounded-md border border-line-strong bg-transparent px-3 py-1.5 text-base text-foreground outline-none focus:border-accent"
           />
@@ -180,15 +223,39 @@ export default function RecurrencePicker({ value, onChange }: Props) {
               Day
             </p>
             <input
-              type="number"
-              min={1}
-              max={31}
-              value={yearDay}
-              onChange={(e) =>
-                setYearDay(
-                  Math.max(1, Math.min(31, Number(e.target.value) || 1))
-                )
-              }
+              type="text"
+              inputMode="numeric"
+              pattern="[0-9]*"
+              value={yearDayInput}
+              onFocus={(e) => {
+                console.log("[picker-debug] onFocus", {
+                  currentValue: e.target.value,
+                  yearDay,
+                  yearDayInput,
+                });
+              }}
+              onChange={(e) => {
+                console.log("[picker-debug] onChange", {
+                  rawInput: e.target.value,
+                  yearDay,
+                  yearDayInput,
+                });
+                setYearDayInput(e.target.value.replace(/[^0-9]/g, "").slice(0, 2));
+              }}
+              onBlur={(e) => {
+                console.log("[picker-debug] onBlur", {
+                  currentValue: e.target.value,
+                  yearDay,
+                  yearDayInput,
+                });
+                commitDay(
+                  yearDayInput,
+                  yearDay,
+                  daysInMonth(yearMonth),
+                  setYearDay,
+                  setYearDayInput
+                );
+              }}
               className="w-20 rounded-md border border-line-strong bg-transparent px-3 py-1.5 text-base text-foreground outline-none focus:border-accent"
             />
           </div>
