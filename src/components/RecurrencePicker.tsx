@@ -14,6 +14,12 @@ const KINDS: { id: Kind; label: string }[] = [
   { id: "after-completion", label: "After completion" },
 ];
 
+// Number of days in a given month index. 2000 is a leap year, so February
+// returns 29 — yearly recurrences can legitimately land on Feb 29.
+function daysInMonth(month: number): number {
+  return new Date(2000, month + 1, 0).getDate();
+}
+
 const DAY_LABELS = ["S", "M", "T", "W", "T", "F", "S"];
 const MONTH_LABELS = [
   "Jan",
@@ -142,18 +148,17 @@ export default function RecurrencePicker({ value, onChange }: Props) {
           <p className="mb-2 text-xs uppercase tracking-wider text-muted">
             Day of month
           </p>
-          <input
-            type="number"
-            min={1}
-            max={31}
+          <select
             value={dayOfMonth}
-            onChange={(e) =>
-              setDayOfMonth(
-                Math.max(1, Math.min(31, Number(e.target.value) || 1))
-              )
-            }
-            className="w-20 rounded-md border border-line-strong bg-transparent px-3 py-1.5 text-base text-foreground outline-none focus:border-accent"
-          />
+            onChange={(e) => setDayOfMonth(Number(e.target.value))}
+            className="rounded-md border border-line-strong bg-surface px-3 py-1.5 text-base text-foreground outline-none focus:border-accent"
+          >
+            {Array.from({ length: 31 }, (_, i) => i + 1).map((d) => (
+              <option key={d} value={d}>
+                {d}
+              </option>
+            ))}
+          </select>
         </div>
       )}
 
@@ -165,7 +170,12 @@ export default function RecurrencePicker({ value, onChange }: Props) {
             </p>
             <select
               value={yearMonth}
-              onChange={(e) => setYearMonth(Number(e.target.value))}
+              onChange={(e) => {
+                const newMonth = Number(e.target.value);
+                setYearMonth(newMonth);
+                const max = daysInMonth(newMonth);
+                if (yearDay > max) setYearDay(max);
+              }}
               className="rounded-md border border-line-strong bg-surface px-3 py-1.5 text-base text-foreground outline-none focus:border-accent"
             >
               {MONTH_LABELS.map((m, i) => (
@@ -179,18 +189,19 @@ export default function RecurrencePicker({ value, onChange }: Props) {
             <p className="mb-2 text-xs uppercase tracking-wider text-muted">
               Day
             </p>
-            <input
-              type="number"
-              min={1}
-              max={31}
+            <select
               value={yearDay}
-              onChange={(e) =>
-                setYearDay(
-                  Math.max(1, Math.min(31, Number(e.target.value) || 1))
+              onChange={(e) => setYearDay(Number(e.target.value))}
+              className="rounded-md border border-line-strong bg-surface px-3 py-1.5 text-base text-foreground outline-none focus:border-accent"
+            >
+              {Array.from({ length: daysInMonth(yearMonth) }, (_, i) => i + 1).map(
+                (d) => (
+                  <option key={d} value={d}>
+                    {d}
+                  </option>
                 )
-              }
-              className="w-20 rounded-md border border-line-strong bg-transparent px-3 py-1.5 text-base text-foreground outline-none focus:border-accent"
-            />
+              )}
+            </select>
           </div>
         </div>
       )}
